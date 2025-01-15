@@ -1,0 +1,21 @@
+prueba <- select(.data = df, c(a1:a12))
+
+summary(prueba)
+
+sjPlot::plot_likert(prueba,
+                    catcount = 5,
+                    show.n = T,
+                    cat.neutral = 3)
+
+# aparece este error  
+> sjPlot::plot_likert(prueba,
++                     catcount = 5,
++                     show.n = T,
++                     cat.neutral = 3)
+Error en freq[valid] <- counts: 
+  solamente 0 s pueden ser mezclados con subscritos negativos
+
+#se soluciona de esta manera 
+
+prueba <- prueba %>%
+  mutate(across(everything(), ~ replace(.x, .x %in% c(-99, -88), NA)))
