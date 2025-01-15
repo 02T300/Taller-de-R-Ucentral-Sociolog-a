@@ -1,0 +1,81 @@
+#librerias en R que se ocuparon
+#- haven
+#- dplyr
+#- sjPlot
+#-cowplot
+# base de datos: Base de datos EBS 2023.sav
+# se trató de realizar un gráfico de la librería sjPlot con el plot_liker de la variante a1 hasta la a12 para ello se realiza lo siguiente   
+# creación de data
+prueba <- select(.data = df, c(a1:a12))
+# Liker que no funciona 
+sjPlot::plot_likert(prueba,
+                    catcount = 7,
+                    show.n = T,
+                    cat.neutral = 3)
+# Error que aparece 
+#Error en freq[valid] <- counts: 
+  #solamente 0s pueden ser mezclados con subscritos negativos
+# corrección 
+prueba <- select(.data = df, c(a1:a12)) %>%
+  mutate(across(everything(), ~ replace(.x, .x %in% c(-99, -88), NA))) 
+                         
+# Liker corregido
+sjPlot::plot_likert(
+  prueba,
+  catcount = 7,
+  grid.range = c(0.5,1),
+  show.n = TRUE,
+  cat.neutral = NULL,
+  geom.colors = c("#D32F2F", "#F44336", "#FF5722", "#FF9800", "#8BC34A", "#388E3C", "#2C6B26"),
+  title = "Gráfico de Likert - Encuesta 2023",
+  legend.pos = "top")
+
+# separación de preguntas por categorías
+# Preguntas con categoría neutral
+pruebas_con_neutral <- prueba %>%
+  select(c(a1,a3:a12))
+
+# Preguntas sin categoría neutral
+pruebas_sin_neutral <- prueba %>%
+  select(-c(a1,a3:a12)) 
+
+# Gráfico con categoría neutral
+grafico_con_neutral <- sjPlot::plot_likert(
+  pruebas_con_neutral,
+  catcount = 6,
+  show.n = T,
+  show.prc.sign = T,
+  cat.neutral = 5,
+  geom.colors = c("#F44336", "#FF5722", "#FF9800", "#98FB98", "#8BC34A", "#388E3C"),
+  title = "Preguntas con categoría neutral",
+  grid.range = c(0.9,0.7),
+  grid.breaks = 0.1,
+  legend.pos = "top")+
+  theme(axis.text.x = element_text(color = "black", size = 10))+
+  theme(axis.text.y = element_text(color = "black",face = "bold", size = 10))
+
+# Gráfico sin categoría neutral
+grafico_sin_neutral <- sjPlot::plot_likert(
+  pruebas_sin_neutral,
+  catcount = 7,
+  show.n = T,
+  show.prc.sign = T,
+  geom.colors = c("#D2691E", "#FF7F50", "#FFD700", "#98FB98","#8BC34A","#388E3C", "#4682B4"),
+  title = "Preguntas sin categoría neutral",
+  grid.range = c(0.4,1),
+  grid.breaks = 0.1,
+  legend.pos = "top")+
+  theme(axis.text.x = element_text(color = "black", size = 10))+
+  theme(axis.text.y = element_text(color = "black",face = "bold", size = 10))
+
+#libreria necesaria para combinar ambos gráficos
+#install.packages("cowplot") # en caso de que no lo tengan
+library(cowplot)
+
+# Combinar ambos gráficos
+plot_grid(
+  grafico_con_neutral,
+  grafico_sin_neutral,
+  labels = c("A", "B"),
+  rel_heights = c(10,6),
+  ncol = 1)
